@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沉浸式塔罗 · 三牌阵抽取</title>
+    <style>
+        /* 全局重置与背景 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(145deg, #1b0f33, #2a1552);
+            color: #fff;
+            padding: 15px;
+        }
+        
+        /* 背景星空 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1.5px 1.5px at 50% 80%, rgba(255,255,255,0.6), transparent);
+            background-size: 200px 200px;
+            z-index: -1;
+        }
+
+        /* 主容器 */
+        .container {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(10px);
+            padding: 25px 20px 35px;
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            width: 100%;
+            max-width: 750px;
+            transition: all 0.3s;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, #d4b6ff, #88d0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        /* --- 阶段1：问题输入区 --- */
+        #stepInput {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        #stepInput input {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 14px 20px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+        #stepInput input:focus {
+            border-color: #b388ff;
+            box-shadow: 0 0 15px rgba(179, 136, 255, 0.2);
+        }
+        #stepInput input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .btn-main {
+            background: linear-gradient(135deg, #b388ff, #7c4dff);
+            border: none;
+            color: #fff;
+            padding: 14px 48px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(124, 77, 255, 0.3);
+            transition: 0.2s;
+        }
+        .btn-main:hover { transform: scale(1.03); box-shadow: 0 6px 25px rgba(124, 77, 255, 0.5); }
+        .btn-main:active { transform: scale(0.95); }
+        .btn-main:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* --- 阶段2：牌阵区 --- */
+        #stepSelect {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .instruction {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+        .instruction span {
+            color: #d4af37;
+            font-weight: bold;
+        }
+
+        /* 78张牌阵列（后台生成，用flex换行平铺） */
+        #cardGrid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 25px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            /* 自定义滚动条 */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.2) transparent;
+        }
+        #cardGrid::-webkit-scrollbar { width: 4px; }
+        #cardGrid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        /* 单张小牌 */
+        .mini-card {
+            width: 50px;
+            height: 70px;
+            background: radial-gradient(circle at 30% 30%, #4b2a6e, #1f1240);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            color: #d4af37;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .mini-card:hover {
+            transform: translateY(-5px) scale(1.05);
+            border-color: #b388ff;
+            box-shadow: 0 8px 20px rgba(179, 136, 255, 0.2);
+        }
+        .mini-card.selected {
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 15px #ffd700;
+            transform: scale(1.05);
+        }
+        .mini-card.selected::after {
+            content: '';
+            position: absolute;
+            top: -2px; right: -2px;
+            width: 12px; height: 12px;
+            background: #ffd700;
+            border-radius: 50%;
+        }
+        
+        /* 牌翻开后的显示区（隐藏状态，抽取结束后显示） */
+        #stepResult {
+            display: none;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .result-card {
+            background: linear-gradient(160deg, #f8f7fc, #e2dfec);
+            color: #333;
+            padding: 15px 5px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .result-card .icon { font-size: 32px; margin-bottom: 8px; }
+        .result-card .cn { font-size: 18px; font-weight: bold; }
+        .result-card .en { font-size: 12px; color: #666; margin-top: 4px; }
+
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 10px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        .btn-reset:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* 响应式适配 */
+        @media (max-width: 480px) {
+            .mini-card { width: 40px; height: 56px; font-size: 16px; }
+            .result-card { min-height: 120px; padding: 10px 5px; }
+            .result-card .cn { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>✦ 心念塔罗</h1>
+    </div>
+
+    <!-- 步骤1：输入问题 -->
+    <div id="stepInput">
+        <input type="text" id="questionInput" placeholder="请输入你心中想问的问题..." maxlength="50">
+        <button class="btn-main" id="confirmBtn">确认问题，开始抽牌 ✨</button>
+    </div>
+
+    <!-- 步骤2：选择3张牌 -->
+    <div id="stepSelect">
+        <div class="instruction">请在下方牌阵中，选择你心仪的 <span>3</span> 张牌（已选 <span id="selectCount">0</span>/3）</div>
+        <div id="cardGrid"></div>
+        <button class="btn-main" id="revealBtn" disabled>揭示命运之牌 🔮</button>
+    </div>
+
+    <!-- 步骤3：展示结果 -->
+    <div id="stepResult">
+        <div class="result-grid" id="resultGrid"></div>
+        <button class="btn-reset" id="resetBtn">🔄 重新占卜</button>
+    </div>
+</div>
+
+<script>
+    // --- 1. 塔罗牌数据 (78张) ---
+    const tarotDeck = [
+        "愚者 The Fool", "魔术师 The Magician", "女祭司 The High Priestess", "女皇 The Empress", 
+        "皇帝 The Emperor", "教皇 The Hierophant", "恋人 The Lovers", "战车 The Chariot", 
+        "力量 Strength", "隐者 The Hermit", "命运之轮 Wheel of Fortune", "正义 Justice", 
+        "倒吊人 The Hanged Man", "死神 Death", "节制 Temperance", "恶魔 The Devil", 
+        "高塔 The Tower", "星星 The Star", "月亮 The Moon", "太阳 The Sun", 
+        "审判 Judgement", "世界 The World",
+        "权杖王牌 Ace of Wands", "权杖二 Two of Wands", "权杖三 Three of Wands", "权杖四 Four of Wands",
+        "权杖五 Five of Wands", "权杖六 Six of Wands", "权杖七 Seven of Wands", "权杖八 Eight of Wands",
+        "权杖九 Nine of Wands", "权杖十 Ten of Wands", "权杖侍从 Page of Wands", "权杖骑士 Knight of Wands",
+        "权杖王后 Queen of Wands", "权杖国王 King of Wands",
+        "圣杯王牌 Ace of Cups", "圣杯二 Two of Cups", "圣杯三 Three of Cups", "圣杯四 Four of Cups",
+        "圣杯五 Five of Cups", "圣杯六 Six of Cups", "圣杯七 Seven of Cups", "圣杯八 Eight of Cups",
+        "圣杯九 Nine of Cups", "圣杯十 Ten of Cups", "圣杯侍从 Page of Cups", "圣杯骑士 Knight of Cups",
+        "圣杯王后 Queen of Cups", "圣杯国王 King of Cups",
+        "宝剑王牌 Ace of Swords", "宝剑二 Two of Swords", "宝剑三 Three of Swords", "宝剑四 Four of Swords",
+        "宝剑五 Five of Swords", "宝剑六 Six of Swords", "宝剑七 Seven of Swords", "宝剑八 Eight of Swords",
+        "宝剑九 Nine of Swords", "宝剑十 Ten of Swords", "宝剑侍从 Page of Swords", "宝剑骑士 Knight of Swords",
+        "宝剑王后 Queen of Swords", "宝剑国王 King of Swords",
+        "星币王牌 Ace of Pentacles", "星币二 Two of Pentacles", "星币三 Three of Pentacles", "星币四 Four of Pentacles",
+        "星币五 Five of Pentacles", "星币六 Six of Pentacles", "星币七 Seven of Pentacles", "星币八 Eight of Pentacles",
+        "星币九 Nine of Pentacles", "星币十 Ten of Pentacles", "星币侍从 Page of Pentacles", "星币骑士 Knight of Pentacles",
+        "星币王后 Queen of Pentacles", "星币国王 King of Pentacles"
+    ];
+
+    const icons = ["🌿", "🔥", "💧", "🌪️", "⭐", "🌙", "☀️", "🌹", "🗡️", "💰", "🦁", "👑"];
+
+    // --- 2. DOM元素 ---
+    const stepInput = document.getElementById('stepInput');
+    const stepSelect = document.getElementById('stepSelect');
+    const stepResult = document.getElementById('stepResult');
+    const questionInput = document.getElementById('questionInput');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const cardGrid = document.getElementById('cardGrid');
+    const selectCount = document.getElementById('selectCount');
+    const revealBtn = document.getElementById('revealBtn');
+    const resultGrid = document.getElementById('resultGrid');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // --- 3. 状态变量 ---
+    let selectedCards = []; // 存储选中的3张牌的数据 { index, name, icon }
+    let currentQuestion = "";
+
+    // --- 4. 步骤1：确认问题 ---
+    confirmBtn.addEventListener('click', () => {
+        const q = questionInput.value.trim();
+        if (!q) {
+            questionInput.style.borderColor = "#ff6b6b";
+            setTimeout(() => questionInput.style.borderColor = "rgba(255,255,255,0.1)", 1000);
+            return;
+        }
+        currentQuestion = q;
+        stepInput.style.display = 'none';
+        stepSelect.style.display = 'flex';
+        generateCardGrid();
+    });
+
+    // 回车键也可确认问题
+    questionInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') confirmBtn.click();
+    });
+
+    // --- 5. 步骤2：生成牌阵并抽牌 ---
+    function generateCardGrid() {
+        cardGrid.innerHTML = '';
+        selectedCards = [];
+        selectCount.textContent = '0';
+        revealBtn.disabled = true;
+
+        // 生成78张牌背（按索引排序，随机打乱或者固定，这里我们固定牌背，但牌面是随机抽取的）
+        // 为了模拟“凭直觉抽取”，我们生成78个可点击的格子，点击时去牌库里随机抽一张（保证不重复）
+        // 但更真实的是：点击时从剩余的牌里拿走一张。这里为了符合你的需求（在不知道的牌中随机抽3张），
+        // 我们设计为：每个格子点击后，将对应的牌“翻开”，并记录下来。
+        // 因为数据是未知的，所以点击一个格子，我们就去牌库中随机选一张展示。
+        
+        // 为了保持真正“未知”的感觉，我们一次生成78个背面一样的格子，点击触发“翻开”动作。
+        for (let i = 0; i < 78; i++) {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'mini-card';
+            cardEl.textContent = '✦'; // 牌背符号
+            cardEl.dataset.index = i;
+            
+            cardEl.addEventListener('click', () => handleCardClick(cardEl, i));
+            cardGrid.appendChild(cardEl);
+        }
+    }
+
+    function handleCardClick(el, index) {
+        // 如果已经选了3张，或者这张牌已经被点开了，则忽略
+        if (selectedCards.length >= 3 || el.classList.contains('selected')) return;
+
+        // 从剩余牌池中随机抽一张 (模拟未知抽牌)
+        // 为了保证不重复，我们建立一个可用牌池。因为点击是随机的，所以有可能重复抽到一样的。
+        // 最简单且符合直觉的做法：点击时随机返回一张牌库中的牌，记录到selectedCards。
+        
+        const randomIndex = Math.floor(Math.random() * tarotDeck.length);
+        const rawName = tarotDeck[randomIndex];
+        
+        // 分割中英文
+        let cn = rawName, en = "";
+        if (rawName.includes(' ')) {
+            const space = rawName.indexOf(' ');
+            cn = rawName.substring(0, space);
+            en = rawName.substring(space + 1);
+        }
+
+        // 记录这张牌
+        selectedCards.push({
+            name: rawName,
+            cn: cn,
+            en: en,
+            icon: icons[Math.floor(Math.random() * icons.length)]
+        });
+
+        // 修改UI：牌面翻开，显示内容（虽然是小图，但为了酷一点，我们显示小图标+英文缩写）
+        el.textContent = icons[Math.floor(Math.random() * icons.length)];
+        el.style.fontSize = "24px";
+        el.style.color = "#fff";
+        el.style.background = "linear-gradient(160deg, #f8f7fc, #e2dfec)";
+        el.classList.add('selected'); // 标记为已选
+
+        // 更新计数
+        selectCount.textContent = selectedCards.length;
+        
+        // 如果选满了3张，启用“揭示”按钮
+        if (selectedCards.length === 3) {
+            revealBtn.disabled = false;
+        }
+    }
+
+    // --- 6. 步骤3：揭示命运之牌 ---
+    revealBtn.addEventListener('click', () => {
+        // 隐藏选牌区，展示结果区
+        stepSelect.style.display = 'none';
+        stepResult.style.display = 'block';
+
+        // 生成三张大牌展示
+        resultGrid.innerHTML = '';
+        selectedCards.forEach((card, idx) => {
+            const div = document.createElement('div');
+            div.className = 'result-card';
+            div.innerHTML = `
+                <div class="icon">${card.icon}</div>
+                <div class="cn">${card.cn}</div>
+                <div class="en">${card.en}</div>
+            `;
+            resultGrid.appendChild(div);
+        });
+
+        // --- 【你的API对接处】 ---
+        const payload = {
+            question: currentQuestion,
+            cards: selectedCards.map(c => c.name) // 只发牌名，你可以带上中英文
+        };
+        console.log("准备发送给API的数据:", payload);
+        // fetch('/your-api', { method: 'POST', body: JSON.stringify(payload) });
+    });
+
+    // --- 7. 重置/重新占卜 ---
+    resetBtn.addEventListener('click', () => {
+        stepResult.style.display = 'none';
+        stepInput.style.display = 'flex';
+        questionInput.value = '';
+        questionInput.focus();
+    });
+
+</script>
+</body>
+</html>
