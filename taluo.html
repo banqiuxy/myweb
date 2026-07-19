@@ -590,12 +590,11 @@
 
         try {
           const response = await fetch(
-            "https://api.deepseek.com/chat/completions",
+            "https://taluo.banqiuxy.workers.dev/",
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: "Bearer sk-3b7954b04c9e4263a3e4d9f85f8beb4f",
               },
               body: JSON.stringify({
                 model: "deepseek-v4-flash",
