@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>💖心动 • 我喜欢你</title>
+  <style>
+    /* ===== 全局重置 ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #0b0a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+      overflow: hidden;
+      position: relative;
+      padding: 0;
+      user-select: none;
+    }
+
+    /* ===== 画布 (烟花 + 粒子 + 爱心) ===== */
+    #canvas-main {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* ===== 文字层 (无方框，直接浮在画布上) ===== */
+    .text-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;  /* 让点击穿透到画布触发烟花 */
+      text-align: center;
+      padding: 20px;
+      color: #f5eaff;
+      text-shadow: 0 0 30px rgba(255, 60, 160, 0.3), 0 0 60px rgba(255, 30, 120, 0.2);
+    }
+
+    /* ===== 跳动的大爱心 (文字上方) ===== */
+    .heart-beat {
+      font-size: 72px;
+      color: #ff3d7f;
+      text-shadow: 0 0 40px #ff1a6e, 0 0 80px #ff0066, 0 0 120px #cc0055;
+      display: inline-block;
+      margin-bottom: 12px;
+      animation: heartPulse 1.4s ease-in-out infinite;
+      transform-origin: center;
+      line-height: 1;
+    }
+
+    @keyframes heartPulse {
+      0% { transform: scale(1); text-shadow: 0 0 30px #ff1a6e, 0 0 60px #ff0066; }
+      15% { transform: scale(1.18); text-shadow: 0 0 60px #ff4d94, 0 0 120px #ff1a6e, 0 0 180px #cc0055; }
+      30% { transform: scale(1); text-shadow: 0 0 30px #ff1a6e, 0 0 60px #ff0066; }
+      45% { transform: scale(1.12); text-shadow: 0 0 50px #ff4d94, 0 0 100px #ff1a6e; }
+      60% { transform: scale(1); text-shadow: 0 0 30px #ff1a6e, 0 0 60px #ff0066; }
+      100% { transform: scale(1); text-shadow: 0 0 30px #ff1a6e, 0 0 60px #ff0066; }
+    }
+
+    /* ===== 标题 ===== */
+    .title {
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, #ffe6f0, #ffb3d1, #ff80b0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 40px rgba(255, 80, 160, 0.3);
+      margin-bottom: 6px;
+      line-height: 1.2;
+    }
+
+    /* ===== 副标题 ===== */
+    .sub-message {
+      font-size: 1.15rem;
+      font-weight: 300;
+      color: #d9c9f0;
+      letter-spacing: 3px;
+      margin-bottom: 14px;
+      opacity: 0.9;
+    }
+    .sub-message i {
+      color: #ff6fa8;
+      margin: 0 6px;
+    }
+
+    /* ===== 情诗 ===== */
+    .poem {
+      font-size: 1.1rem;
+      line-height: 2;
+      font-weight: 300;
+      color: #f0e4ff;
+      letter-spacing: 0.5px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .poem i {
+      color: #ff7eb3;
+      margin: 0 4px;
+    }
+    .highlight {
+      color: #ffb3d9;
+      font-weight: 500;
+      text-shadow: 0 0 18px #ff4d94;
+    }
+
+    /* ===== 底部小提示 ===== */
+    .hint {
+      position: fixed;
+      bottom: 28px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      z-index: 30;
+      color: rgba(255, 200, 230, 0.25);
+      font-size: 0.85rem;
+      letter-spacing: 3px;
+      font-weight: 300;
+      pointer-events: none;
+      text-shadow: 0 0 12px rgba(255, 80, 180, 0.1);
+      padding: 8px 0;
+    }
+    .hint i {
+      color: rgba(255, 120, 200, 0.3);
+      margin: 0 6px;
+    }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 480px) {
+      .title { font-size: 2.0rem; }
+      .poem { font-size: 0.95rem; padding: 0 10px; }
+      .heart-beat { font-size: 56px; }
+      .sub-message { font-size: 0.95rem; }
+      .hint { font-size: 0.7rem; bottom: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 主画布 (动态效果) -->
+  <canvas id="canvas-main"></canvas>
+
+  <!-- 文字层 (无方框，直接显示) -->
+  <div class="text-overlay">
+    <div class="heart-beat">
+      <i class="fas fa-heart"></i>
+    </div>
+    <h1 class="title">💗 你是我的一切 💗</h1>
+    <div class="sub-message">
+      <i class="fas fa-star"></i>  forever & always  <i class="fas fa-star"></i>
+    </div>
+    <div class="poem">
+      <i class="fas fa-quote-left" style="opacity:0.4;"></i>
+      烟火璀璨，不及你 <span class="highlight">回眸</span>；<br>
+      心跳如鼓，皆因你 <span class="highlight">出现</span>。<br>
+      你是我藏在 <i class="fas fa-heart" style="color:#ff4d94;"></i> 里的 <span class="highlight">唯一</span>，
+      <br>也是我 <i class="fas fa-infinity"></i> 永恒的 <span class="highlight">眷恋</span>。
+      <i class="fas fa-quote-right" style="opacity:0.4;"></i>
+    </div>
+  </div>
+
+  <!-- 底部提示 -->
+  <div class="hint">
+    <i class="fas fa-heart"></i> 点击任意位置 · 绽放烟花 <i class="fas fa-heart"></i>
+  </div>
+
+  <!-- 加载 Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <script>
+    (function() {
+      "use strict";
+
+      // ============================================================
+      // 1. Canvas 设置
+      // ============================================================
+      const canvas = document.getElementById('canvas-main');
+      const ctx = canvas.getContext('2d');
+      let W, H;
+
+      function resizeCanvas() {
+        W = window.innerWidth;
+        H = window.innerHeight;
+        canvas.width = W;
+        canvas.height = H;
+      }
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+        if (bgParticles.length > 0) {
+          bgParticles = [];
+          for (let i = 0; i < BG_COUNT; i++) {
+            bgParticles.push(new BgParticle());
+          }
+        }
+        if (floatingHearts.length > 0) {
+          floatingHearts = [];
+          for (let i = 0; i < FLOATING_HEART_COUNT; i++) {
+            floatingHearts.push(new FloatingHeart());
+          }
+        }
+      });
+
+      // ============================================================
+      // 2. 背景粒子
+      // ============================================================
+      const BG_COUNT = 80;
+      let bgParticles = [];
+
+      class BgParticle {
+        constructor() {
+          this.x = Math.random() * W;
+          this.y = Math.random() * H;
+          this.size = Math.random() * 2.6 + 0.8;
+          this.speedX = (Math.random() - 0.5) * 0.5;
+          this.speedY = (Math.random() - 0.5) * 0.5;
+          this.opacity = Math.random() * 0.5 + 0.15;
+          const colors = ['255, 160, 200', '210, 140, 255', '255, 180, 220', '180, 150, 255', '200, 200, 255'];
+          this.color = colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          if (this.x < 0 || this.x > W) this.speedX *= -1;
+          if (this.y < 0 || this.y > H) this.speedY *= -1;
+          if (Math.random() < 0.005) {
+            this.speedX += (Math.random() - 0.5) * 0.2;
+            this.speedY += (Math.random() - 0.5) * 0.2;
+            const maxSpeed = 0.7;
+            if (Math.abs(this.speedX) > maxSpeed) this.speedX = Math.sign(this.speedX) * maxSpeed;
+            if (Math.abs(this.speedY) > maxSpeed) this.speedY = Math.sign(this.speedY) * maxSpeed;
+          }
+        }
+
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+          ctx.shadowColor = `rgba(${this.color}, 0.2)`;
+          ctx.shadowBlur = 8;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      function initBgParticles() {
+        bgParticles = [];
+        for (let i = 0; i < BG_COUNT; i++) {
+          bgParticles.push(new BgParticle());
+        }
+      }
+
+      // ============================================================
+      // 3. 浮动爱心
+      // ============================================================
+      const FLOATING_HEART_COUNT = 35;
+      let floatingHearts = [];
+
+      class FloatingHeart {
+        constructor() {
+          this.reset();
+          this.x = Math.random() * W;
+          this.y = Math.random() * H;
+          this.size = Math.random() * 32 + 16;
+          this.alpha = Math.random() * 0.5 + 0.3;
+          this.speedX = (Math.random() - 0.5) * 0.6;
+          this.speedY = (Math.random() - 0.5) * 0.6 - 0.2;
+          this.rotation = Math.random() * Math.PI * 2;
+          this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+          const hue = 320 + Math.random() * 40;
+          this.color = `hsla(${hue}, 85%, 70%, `;
+          this.scale = 1;
+          this.scaleSpeed = 0.005 + Math.random() * 0.01;
+          this.scalePhase = Math.random() * 100;
+          this.life = 1;
+          this.decay = 0.0002 + Math.random() * 0.0003;
+        }
+
+        reset() {
+          this.x = Math.random() * W;
+          this.y = Math.random() * H;
+          this.size = Math.random() * 32 + 16;
+          this.alpha = Math.random() * 0.5 + 0.3;
+          this.speedX = (Math.random() - 0.5) * 0.6;
+          this.speedY = (Math.random() - 0.5) * 0.6 - 0.2;
+          this.rotation = Math.random() * Math.PI * 2;
+          this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+          this.scale = 1;
+          this.life = 1;
+          const hue = 320 + Math.random() * 40;
+          this.color = `hsla(${hue}, 85%, 70%, `;
+        }
+
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          if (this.x < -50 || this.x > W + 50) {
+            this.speedX *= -1;
+            this.x = Math.min(Math.max(this.x, 10), W - 10);
+          }
+          if (this.y < -50 || this.y > H + 50) {
+            this.speedY *= -1;
+            this.y = Math.min(Math.max(this.y, 10), H - 10);
+          }
+          this.rotation += this.rotationSpeed;
+          this.scalePhase += this.scaleSpeed;
+          this.scale = 1 + Math.sin(this.scalePhase) * 0.08;
+          this.alpha -= this.decay;
+          if (this.alpha < 0.1) {
+            this.reset();
+            this.alpha = 0.5 + Math.random() * 0.4;
+          }
+        }
+
+        draw() {
+          const s = this.size * this.scale;
+          const x = this.x;
+          const y = this.y;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(this.rotation);
+          ctx.globalAlpha = Math.min(this.alpha, 0.9);
+          ctx.shadowColor = `hsla(330, 80%, 70%, 0.4)`;
+          ctx.shadowBlur = 25;
+
+          ctx.beginPath();
+          ctx.moveTo(0, -s * 0.3);
+          ctx.bezierCurveTo(-s * 0.6, -s * 0.8, -s * 1.0, 0, 0, s * 0.6);
+          ctx.bezierCurveTo(s * 1.0, 0, s * 0.6, -s * 0.8, 0, -s * 0.3);
+          ctx.closePath();
+
+          const grad = ctx.createRadialGradient(0, -s*0.1, s*0.1, 0, 0, s*0.9);
+          grad.addColorStop(0, this.color + '1.0)');
+          grad.addColorStop(0.7, this.color + '0.8)');
+          grad.addColorStop(1, this.color + '0.2)');
+          ctx.fillStyle = grad;
+          ctx.fill();
+          ctx.shadowBlur = 30;
+          ctx.strokeStyle = this.color + '0.5)';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+
+          ctx.restore();
+          ctx.globalAlpha = 1;
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      function initFloatingHearts() {
+        floatingHearts = [];
+        for (let i = 0; i < FLOATING_HEART_COUNT; i++) {
+          floatingHearts.push(new FloatingHeart());
+        }
+      }
+
+      // ============================================================
+      // 4. 烟花系统
+      // ============================================================
+      let fireworks = [];
+      const GRAVITY = 0.055;
+      const FADE = 0.97;
+
+      class FireworkParticle {
+        constructor(x, y, color, velocity, size) {
+          this.x = x;
+          this.y = y;
+          this.color = color;
+          this.size = size || (Math.random() * 3.6 + 1.6);
+          this.alpha = 1;
+          this.velocity = {
+            x: velocity.x || (Math.random() - 0.5) * 7,
+            y: velocity.y || (Math.random() - 0.5) * 7 - 1.5
+          };
+          this.gravity = GRAVITY * (0.6 + Math.random() * 0.6);
+          this.friction = 0.98 + Math.random() * 0.015;
+          this.life = 1;
+          this.trail = [];
+        }
+
+        update() {
+          this.velocity.x *= this.friction;
+          this.velocity.y *= this.friction;
+          this.velocity.y += this.gravity * 0.4;
+          this.x += this.velocity.x;
+          this.y += this.velocity.y;
+          this.alpha *= FADE * 0.98;
+          this.life -= 0.007;
+          this.size *= 0.998;
+
+          if (Math.random() < 0.25) {
+            this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
+            if (this.trail.length > 6) this.trail.shift();
+          }
+        }
+
+        draw() {
+          for (let i = 0; i < this.trail.length; i++) {
+            const t = this.trail[i];
+            const alpha = t.alpha * 0.25 * (i / this.trail.length);
+            ctx.beginPath();
+            ctx.arc(t.x, t.y, this.size * 0.35, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${this.color}, ${alpha})`;
+            ctx.fill();
+          }
+
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, Math.max(this.size, 0.3), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${this.color}, ${this.alpha * 0.9})`;
+          ctx.shadowColor = `rgba(${this.color}, ${this.alpha * 0.5})`;
+          ctx.shadowBlur = 22;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size * 0.15, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha * 0.5})`;
+          ctx.fill();
+        }
+      }
+
+      function createFirework(x, y) {
+        if (x === undefined) {
+          x = Math.random() * W * 0.7 + W * 0.15;
+          y = Math.random() * H * 0.4 + H * 0.1;
+        } else {
+          x = Math.min(Math.max(x, 20), W - 20);
+          y = Math.min(Math.max(y, 20), H - 20);
+        }
+
+        const colors = [
+          `255, ${120 + Math.floor(Math.random() * 80)}, ${180 + Math.floor(Math.random() * 70)}`,
+          `${200 + Math.floor(Math.random() * 55)}, ${130 + Math.floor(Math.random() * 80)}, 255`,
+          `255, ${180 + Math.floor(Math.random() * 75)}, ${100 + Math.floor(Math.random() * 80)}`,
+          '255, 200, 150',
+          '150, 220, 255',
+          '255, 100, 200'
+        ];
+        const mainColor = colors[Math.floor(Math.random() * colors.length)];
+        const count = 70 + Math.floor(Math.random() * 60);
+
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 5.8 + 1.8;
+          const vx = Math.cos(angle) * speed * (0.5 + Math.random() * 0.9);
+          const vy = Math.sin(angle) * speed * (0.5 + Math.random() * 0.9);
+          const size = Math.random() * 3.8 + 1.4;
+          const p = new FireworkParticle(
+            x + (Math.random() - 0.5) * 8,
+            y + (Math.random() - 0.5) * 8,
+            mainColor,
+            { x: vx, y: vy },
+            size
+          );
+          fireworks.push(p);
+        }
+
+        for (let i = 0; i < 18; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 3.5 + 1;
+          const p = new FireworkParticle(
+            x + (Math.random() - 0.5) * 12,
+            y + (Math.random() - 0.5) * 12,
+            '255, 215, 0',
+            { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed },
+            Math.random() * 2.2 + 0.8
+          );
+          p.gravity = 0.02;
+          fireworks.push(p);
+        }
+      }
+
+      let lastFireworkTime = 0;
+
+      function autoFireworks() {
+        const now = Date.now();
+        if (now - lastFireworkTime > 1200 + Math.random() * 1800) {
+          createFirework();
+          lastFireworkTime = now;
+          if (Math.random() < 0.3) {
+            setTimeout(() => { createFirework(); }, 200 + Math.random() * 300);
+          }
+        }
+      }
+
+      // ============================================================
+      // 5. 主渲染循环
+      // ============================================================
+      function drawBackground() {
+        ctx.fillStyle = 'rgba(11, 10, 26, 0.15)';
+        ctx.fillRect(0, 0, W, H);
+
+        for (let p of bgParticles) {
+          p.update();
+          p.draw();
+        }
+
+        for (let i = 0; i < bgParticles.length; i++) {
+          for (let j = i + 1; j < bgParticles.length; j++) {
+            const dx = bgParticles[i].x - bgParticles[j].x;
+            const dy = bgParticles[i].y - bgParticles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 140) {
+              const alpha = 0.12 * (1 - dist / 140);
+              ctx.beginPath();
+              ctx.strokeStyle = `rgba(200, 160, 255, ${alpha})`;
+              ctx.lineWidth = 0.6;
+              ctx.moveTo(bgParticles[i].x, bgParticles[i].y);
+              ctx.lineTo(bgParticles[j].x, bgParticles[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      function updateFireworks() {
+        for (let i = fireworks.length - 1; i >= 0; i--) {
+          const p = fireworks[i];
+          p.update();
+          if (p.alpha < 0.015 || p.life < 0.015 || p.size < 0.1) {
+            fireworks.splice(i, 1);
+          }
+        }
+      }
+
+      function drawFireworks() {
+        for (let p of fireworks) {
+          p.draw();
+        }
+      }
+
+      function drawFloatingHearts() {
+        for (let h of floatingHearts) {
+          h.update();
+          h.draw();
+        }
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, W, H);
+        drawBackground();
+        drawFloatingHearts();
+        autoFireworks();
+        updateFireworks();
+        drawFireworks();
+        requestAnimationFrame(animate);
+      }
+
+      // ============================================================
+      // 6. 初始化 & 启动
+      // ============================================================
+      resizeCanvas();
+      initBgParticles();
+      initFloatingHearts();
+
+      // 开场烟花
+      setTimeout(() => { createFirework(W/2, H*0.3); }, 300);
+      setTimeout(() => { createFirework(W*0.3, H*0.25); }, 600);
+      setTimeout(() => { createFirework(W*0.7, H*0.35); }, 1000);
+      setTimeout(() => { createFirework(W*0.5, H*0.2); }, 1500);
+      setTimeout(() => { createFirework(W*0.2, H*0.4); }, 2000);
+      setTimeout(() => { createFirework(W*0.8, H*0.3); }, 2500);
+
+      animate();
+
+      // ============================================================
+      // 7. 交互彩蛋：点击放烟花
+      // ============================================================
+      document.addEventListener('click', (e) => {
+        createFirework(e.clientX, e.clientY);
+        setTimeout(() => {
+          if (Math.random() < 0.4) {
+            createFirework(e.clientX + (Math.random() - 0.5) * 120, e.clientY + (Math.random() - 0.5) * 80);
+          }
+        }, 150);
+      });
+
+      document.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        if (touch) {
+          createFirework(touch.clientX, touch.clientY);
+        }
+      }, { passive: true });
+
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+        bgParticles = [];
+        initBgParticles();
+        floatingHearts = [];
+        initFloatingHearts();
+      });
+
+    })();
+  </script>
+</body>
+</html>
