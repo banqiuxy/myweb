@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
+    <title>彭瑞涵</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #000000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: "Consolas", monospace;
+            color: #ff6699;
+            white-space: pre;
+            font-size: 14px;
+            line-height: 16px;
+        }
+        .text-bottom{
+            margin-top:20px;
+            font-size:20px;
+            letter-spacing:2px;
+        }
+    </style>
+</head>
+<body>
+<pre id="heartBox"></pre>
+<div class="text-bottom">希望彭瑞涵这个小呆呆<br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;万事胜意<br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;天天开心<br><br>&nbsp;&nbsp;&nbsp;I love you！</div>
+
+<script>
+function buildHeart() {
+    let output = "";
+    // 和C语言完全相同的循环与爱心公式
+    for (let y = 1.2; y > -1.2; y -= 0.1) {
+        for (let x = -1.5; x < 1.5; x += 0.05) {
+            const a = x*x + y*y - 1;
+            output += (a*a*a - x*x*y*y*y <= 0) ? '.' : ' ';
+        }
+        output += "\n";
+    }
+    document.getElementById("heartBox").innerText = output;
+}
+buildHeart();
+</script>
+</body>
+</html>
