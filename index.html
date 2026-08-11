@@ -1,242 +1,568 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>半秋の成长记录小站</title>
-    <link rel="stylesheet" href="./styles.css" />
-    <link rel="icon" href="./head.png" />
-    <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css" />
-    <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
-  </head>
-  <body>
-    <header>
-      <nav>
-        <div class="nav-top">
-          <div class="logo">
-            <img src="./head.png" alt="头像" class="avatar" /> 半秋
-          </div>
-          <div class="menu-toggle" id="menuToggle">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-        <ul class="nav-links" id="navLinks">
-          <li><a href="#home">首页</a></li>
-          <li><a href="#about">关于我</a></li>
-          <li><a href="#projects">作品集</a></li>
-          <li><a href="#contact">联系我</a></li>
-        </ul>
-      </nav>
-    </header>
-    <section id="home" class="hero">
-      <div class="hero-content">
-        <h1>半秋 - My Web</h1>
-        <p>
-          <span id="yearDiff0"></span>年 &amp; 我的<span id="yearDiff1"></span
-          >岁
-        </p>
-        <p>循环就像人生困局，要记得加break.</p>
-        <!--Edited on 2026/01/08 By banqiuxy-->
-      </div>
-    </section>
-    <script>
-      const currentYear = new Date().getFullYear();
-      const yearDiff0 = currentYear - 2017;
-      const yearDiff1 = currentYear - 2008;
-      /*无敌的黑客写法，直接一个个列数组转换*/
-      /*至于这里的注释为什么用这种写法而不用双斜杠 是因为我的编辑器在双斜杠后直接就没有语法高亮了看着难受*/
-      const chineseNumMap = [
-        "零",
-        "一",
-        "二",
-        "三",
-        "四",
-        "五",
-        "六",
-        "七",
-        "八",
-        "九",
-        "十",
-        "十一",
-        "十二",
-        "十三",
-        "十四",
-        "十五",
-        "十六",
-        "十七",
-        "十八",
-        "十九",
-        "二十",
-        "二十一",
-        "二十二",
-        "二十三",
-        "二十四",
-        "二十五",
-        "二十六",
-        "二十七",
-        "二十八",
-        "二十九",
-        "三十",
-        "三十一",
-        "三十二",
-        "三十三",
-        "三十四",
-        "三十五",
-        "三十六",
-        "三十七",
-        "三十八",
-        "三十九",
-        "四十",
-        "四十一",
-        "四十二",
-        "四十三",
-        "四十四",
-        "四十五",
-        "四十六",
-        "四十七",
-        "四十八",
-        "四十九",
-        "五十",
-        "五十一",
-        "五十二",
-        "五十三",
-        "五十四",
-        "五十五",
-        "五十六",
-        "五十七",
-        "五十八",
-        "五十九",
-        "六十",
-        "六十一",
-        "六十二",
-        "六十三",
-        "六十四",
-        "六十五",
-        "六十六",
-        "六十七",
-        "六十八",
-        "六十九",
-        "七十",
-        "七十一",
-        "七十二",
-        "七十三",
-        "七十四",
-        "七十五",
-        "七十六",
-        "七十七",
-        "七十八",
-        "七十九",
-        "八十",
-        "八十一",
-        "八十二",
-        "八十三",
-        "八十四",
-        "八十五",
-        "八十六",
-        "八十七",
-        "八十八",
-        "八十九",
-        "九十",
-        "九十一",
-        "九十二",
-        "九十三",
-        "九十四",
-        "九十五",
-        "九十六",
-        "九十七",
-        "九十八",
-        "九十九",
-      ];
-      function conver2Chinese(num) {
-        if (
-          typeof num !== "number" ||
-          num < 0 ||
-          num > 99 ||
-          Math.floor(num) !== num
-        ) {
-          return num;
-        }
-        return chineseNumMap[num];
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>半秋 - My Web</title>
+  <meta name="description" content="半秋的个人门户网站：个人简介、作品集、MBTI测试与AI塔罗占卜。">
+  <style>
+    /* ============ 全局重置与变量 ============ */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --accent: #6c63ff;
+      --accent-dark: #4a43d8;
+      --nav-bg: rgba(255, 255, 255, 0.85);
+      --text-dark: #1f2430;
+      --card-radius: 18px;
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+                   "Helvetica Neue", Arial, sans-serif;
+      background: #f4f5f7;
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    img { max-width: 100%; display: block; }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* ============ 导航栏 ============ */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 64px;
+      background: var(--nav-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .brand-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center;
+      display: inline-block;
+      flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.4);
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-menu a {
+      font-size: 15px;
+      font-weight: 500;
+      color: #444;
+      transition: color .2s;
+    }
+
+    .nav-menu a:hover { color: var(--accent); }
+
+    /* 汉堡按钮（移动端显示） */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      z-index: 110;
+    }
+
+    .hamburger span {
+      width: 26px;
+      height: 2.5px;
+      background: #333;
+      border-radius: 2px;
+      transition: all .3s;
+    }
+
+    /* 收起时变成 × */
+    .hamburger.active span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+
+    /* ============ Hero 区 ============ */
+    .hero {
+      min-height: calc(100vh - 64px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #fff;
+      background: linear-gradient(135deg, #2d3436, #0984e3);
+      padding: 20px 24px 70px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 7vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 18px;
+    }
+
+    .hero .stats {
+      display: flex;
+      gap: 24px;
+      font-size: clamp(1.1rem, 3vw, 1.8rem);
+      font-weight: 700;
+      margin-bottom: 28px;
+    }
+
+    .hero .stats span { color: #ffd966; }
+
+    .hero .slogan {
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      opacity: .85;
+      font-style: italic;
+    }
+
+    .typing-cursor {
+      opacity: 1;
+      color: #fff;
+      font-weight: bold;
+      font-style: normal;
+      margin-left: 2px;
+      animation: blink 0.8s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      50.01%, 100% { opacity: 0; }
+    }
+
+    /* ============ 内容区块 ============ */
+    .section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 70px 24px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 700;
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: "";
+      display: block;
+      width: 56px;
+      height: 4px;
+      border-radius: 2px;
+      margin: 14px auto 0;
+      background: linear-gradient(90deg, var(--accent), #f06);
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    /* ============ 关于我 ============ */
+    .about-list { list-style: none; font-size: 1.05rem; }
+
+    .about-list li {
+      padding: 10px 0;
+      border-bottom: 1px dashed #ddd;
+    }
+
+    .about-list li:last-child { border-bottom: none; }
+
+    .about-list strong { color: var(--accent-dark); }
+
+    /* ============ 作品集 ============ */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 22px;
+    }
+
+    .project-card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform .25s, box-shadow .25s;
+    }
+
+    .project-card:hover { transform: translateY(-6px); box-shadow: 0 14px 40px rgba(0,0,0,.12); }
+
+    .project-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      background: linear-gradient(135deg, #6c63ff, #f06);
+      color: #fff;
+    }
+
+    .project-card h3 { font-size: 1.3rem; }
+
+    .project-card p { color: #555; font-size: .95rem; flex: 1; }
+
+    .project-note { font-size: .8rem; color: #999; }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      font-size: .95rem;
+      font-weight: 600;
+      text-align: center;
+      transition: all .2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #f06);
+      color: #fff;
+    }
+
+    .btn-primary:hover { filter: brightness(1.08); transform: translateY(-2px); }
+
+    .btn-disabled {
+      background: #e2e5ea;
+      color: #9aa0a9;
+      cursor: not-allowed;
+    }
+
+    /* 绿豆糕图标 */
+    .kernel-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    /* ============ 联系我 ============ */
+    .contact {
+      background: #1f2430;
+      color: #fff;
+      text-align: center;
+    }
+
+    .contact .section-title { color: #fff; }
+    .contact .section-title::after { background: linear-gradient(90deg, #ffd966, #f06); }
+
+    .contact-list { list-style: none; font-size: 1.05rem; line-height: 2.2; }
+
+    .contact-list .copy-link {
+      cursor: pointer;
+      color: #7db7ff;
+      border-bottom: 1px dashed #7db7ff;
+      transition: color .2s;
+    }
+
+    .contact-list .copy-link:hover { color: #ffd966; }
+
+    .handle { font-size: 1.2rem; font-weight: 700; color: #ffd966; margin-top: 8px; }
+
+    .copyright { margin-top: 26px; font-size: .9rem; color: #b8bcc6; }
+
+    /* ============ 轻提示 ============ */
+    .toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: rgba(30, 30, 40, 0.92);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: .95rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 999;
+      box-shadow: 0 8px 24px rgba(0,0,0,.2);
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ============ 响应式 ============ */
+    @media (max-width: 768px) {
+      .navbar { padding: 0 18px; }
+      .nav-menu {
+        position: fixed;
+        top: 64px;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        background: rgba(255,255,255,0.97);
+        box-shadow: 0 8px 20px rgba(0,0,0,.08);
+        padding: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height .35s ease;
       }
-      document.getElementById("yearDiff0").textContent =
-        conver2Chinese(yearDiff0);
-      document.getElementById("yearDiff1").textContent = yearDiff1;
-    </script>
+      .nav-menu.open { max-height: 260px; padding: 10px 0; }
+      .nav-menu li { border-top: 1px solid #f0f0f0; }
+      .nav-menu li:first-child { border-top: none; }
+      .nav-menu a { display: block; padding: 14px 24px; }
+      .hamburger { display: flex; }
+      .section { padding: 50px 18px; }
+      .projects-grid { grid-template-columns: 1fr; }
+      .hero .stats { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
 
-    <mdui-snackbar class="example-snackbar">复制成功！</mdui-snackbar>
+  <!-- ============ 导航栏 ============ -->
+  <nav class="navbar">
+    <div class="brand">
+      <img class="brand-avatar" src="head.png" alt="半秋头像">
+      <span>半秋</span>
+    </div>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="#home">首页</a></li>
+      <li><a href="#about">关于我</a></li>
+      <li><a href="#projects">作品集</a></li>
+      <li><a href="#contact">联系我</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="展开菜单">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
 
-    <section id="about" class="card">
-      <div class="contact-info">
-        <p class="card-title">关于我</p>
-      </div>
-      <div class="card-content">
-        <p>
-          🌟
-          兴趣爱好：编程、网络安全、逆向、游戏、偷吃、数码、摄影、躺平🥺💤、玩
-          啥都爱玩除了学习
-        </p>
-        <p>🎮 常玩游戏：和平精英</p>
-        <p>💻 编程语言：HTML、CSS、JavaScript、PHP、C/C++、Java、Python、Go</p>
-        <p>🎨 框架技能：ImGui、Unity、Vue、Django、SpringBoot</p>
-        <p>🗄️ 数据存储：SQLite、MySQL</p>
-        <p>📚 待解锁：Kotlin、Swift、Rust、Flutter、Redis</p>
-        <p>🤔 会但是不熟的：IDA、APK逆向、汇编（能看懂一些最简单的机器码）</p>
-      </div>
-    </section>
+  <!-- ============ Hero 区 ============ -->
+  <header class="hero" id="home">
+    <h1>半秋 - My Web</h1>
+    <div class="stats">
+      <div><span id="years"></span> &amp; 我的<span id="age"></span>岁</div>
+    </div>
+    <p class="slogan"><span id="sloganText"></span><span class="typing-cursor">|</span></p>
+  </header>
 
-    <section id="projects" class="card">
-      <div class="contact-info">
-        <p class="card-title-projects">作品集</p>
-      </div>
+  <!-- ============ 关于我 ============ -->
+  <section class="section" id="about">
+    <h2 class="section-title">关于我</h2>
+    <div class="glass-card">
+      <ul class="about-list">
+        <li><strong><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:4px;color:#e6b93c;"><circle cx="12" cy="12" r="5"/><path d="M12 1v2"/><path d="M12 21v2"/><path d="m4.22 4.22 1.42 1.42"/><path d="m18.36 18.36 1.42 1.42"/><path d="M1 12h2"/><path d="M21 12h2"/><path d="m4.22 19.78 1.42-1.42"/><path d="m18.36 5.64 1.42-1.42"/></svg>兴趣爱好：</strong>编程、网络安全、逆向、游戏、偷吃、数码、摄影、躺平🥺💤、玩 啥都爱玩除了学习</li>
+        <li><strong><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:4px;color:#e6b93c;"><path d="M6 11h4"/><path d="M8 9v4"/><path d="M15 12h.01"/><path d="M18 10h.01"/><path d="M17.32 5H6.68a4 4 0 0 0-3.97 3.59c-.04.33-.29.58-.62.61-.42.04-.72.41-.72.83v1.94a1.5 1.5 0 0 0 .78 1.32l.28.16v2.3a1.5 1.5 0 0 0 1.5 1.5h1.5a1.5 1.5 0 0 0 1.5-1.5V18h6v1.25a1.5 1.5 0 0 0 1.5 1.5h1.5a1.5 1.5 0 0 0 1.5-1.5v-2.3l.28-.16A1.5 1.5 0 0 0 21 15.5v-1.94c0-.42-.3-.79-.72-.83a.64.64 0 0 1-.62-.61C19.3 6.67 18.37 5 17.32 5z"/></svg>常玩游戏：</strong>和平精英</li>
+        <li><strong><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:4px;color:#0984e3;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>编程语言：</strong>HTML、CSS、JavaScript、PHP、C/C++、Java、Python、Go</li>
+        <li><strong><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:4px;color:#ff6bcb;"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>框架技能：</strong>ImGui、Unity、Vue、Django、SpringBoot</li>
+        <li><strong><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:4px;color:#6ab04c;"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>数据存储：</strong>SQLite、MySQL</li>
+        <li><strong><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:4px;color:#e67e22;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>待解锁：</strong>Kotlin、Swift、Rust、Flutter、Redis</li>
+        <li><strong><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px;margin-right:4px;color:#8e44ad;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg>会但是不熟的：</strong>IDA、APK逆向、汇编（能看懂一些最简单的机器码）</li>
+      </ul>
+    </div>
+  </section>
 
-      <div class="card-content">
-        <div class="project-item">
-          <img src="" alt="项目图标待制作" class="projectsicon" />
-          <span>AnonAsk</span>
-        </div>
-        <p class="projects-details">
-          AnonAsk 一款面向年轻人群体且完全匿名免费的你问我答平台
-          助力每一句说不出口的话
-        </p>
-        <mdui-button disabled full-width style="top: 5px"
-          >正在开发中，敬请期待...</mdui-button
-        >
-      </div>
+  <!-- ============ 作品集 ============ -->
+  <section class="section" id="projects">
+    <h2 class="section-title">作品集</h2>
+    <div class="projects-grid">
 
-      <br />
-      <div class="card-content">
-        <div class="project-item">
-          <img src="./LdgKernel.jpg" alt="项目图标" class="projectsicon" />
-          <span>绿豆糕Kernel</span>
-        </div>
-        <p class="projects-details">
-          依托Linux内核驱动的二进制程序，以APK形式封装启动，专为Android打造的应用调试工具。
-        </p>
-        <p class="tips">* 项目已停更 不提供下载</p>
-      </div>
-    </section>
+      <!-- 1. AnonAsk（正在开发中） -->
+      <article class="project-card">
+        <div class="project-icon"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <h3>AnonAsk</h3>
+        <p>AnonAsk 一款面向年轻人群体且完全匿名免费的你问我答平台 助力每一句说不出口的话</p>
+        <button class="btn btn-disabled" disabled>正在开发中，敬请期待...</button>
+      </article>
 
-    <footer id="contact">
-      <div class="contact-info">
-        <h2>联系我</h2>
-        📧:
-        <a href="mailto:2042199790@qq.com" style="color: white"
-          >通过邮箱联系我</a
-        >
-        <br />
-        💬:
-        <a
-          href="javascript:void(0);"
-          onclick="copyLinkme()"
-          style="color: white"
-          >我的WeChat/QQ</a
-        >
-        <p>@banqiuxy</p>
-        <p class="copyright"></p>
-      </div>
-    </footer>
-    <script src="script.js"></script>
-  </body>
+      <!-- 2. 绿豆糕Kernel（已停更） -->
+      <article class="project-card">
+        <img class="kernel-icon" src="LdgKernel.jpg" alt="绿豆糕Kernel项目图标">
+        <h3>绿豆糕Kernel</h3>
+        <p>依托Linux内核驱动的二进制程序，以APK形式封装启动，专为Android打造的应用调试工具。</p>
+        <p class="project-note">* 项目已停更 不提供下载</p>
+      </article>
+
+      <!-- 3. MBTI 16型人格测试 -->
+      <article class="project-card">
+        <div class="project-icon"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+        <h3>MBTI 16型人格测试</h3>
+        <p>严格遵循国际通用四维度二分法标准，60 题精准测评，本地计算、不上传任何数据。</p>
+        <a class="btn btn-primary" href="mbti.html">进入测试</a>
+      </article>
+
+      <!-- 4. 沉浸式塔罗占卜 -->
+      <article class="project-card">
+        <div class="project-icon"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="14" r="7"/><path d="M12 3v2"/><path d="m5.6 5.6 1.4 1.4"/><path d="m18.4 5.6-1.4 1.4"/></svg></div>
+        <h3>沉浸式塔罗占卜</h3>
+        <p>心念塔罗 · 三牌阵抽取，输入你的问题，AI 为你解读，支持连续追问。</p>
+        <a class="btn btn-primary" href="tarot.html">开始占卜</a>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ 联系我 ============ -->
+  <section class="contact section" id="contact">
+    <h2 class="section-title">联系我</h2>
+    <div class="contact-inner">
+      <ul class="contact-list">
+        <li><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#7db7ff" stroke-width="2" style="vertical-align:-3px;margin-right:6px;"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/></svg><label>通过邮箱联系我（邮箱地址：<a class="copy-link" data-copy="2042199790@qq.com" title="点击复制">2042199790@qq.com</a>）</label></li>
+        <li><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#7db7ff" stroke-width="2" style="vertical-align:-3px;margin-right:6px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><label>我的WeChat/QQ（<span class="copy-link" id="copyWechat" data-copy="banqiuxy">点击可复制</span>）</label></li>
+      </ul>
+      <p class="handle">@banqiuxy</p>
+      <p class="copyright">Copyright © <span id="copyYear"></span> 半秋. All rights reserved. Since 2021</p>
+    </div>
+  </section>
+
+  <!-- 轻提示 -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ============ 年份动态计算 ============
+    const year = new Date().getFullYear();
+
+    // 年份差① = 当前年份 - 2017，用中文大写数字
+    const diffYears = year - 2017;
+    const chineseDigits = ['零','一','二','三','四','五','六','七','八','九'];
+    function toChineseNum(n) {
+      if (n < 10) return chineseDigits[n];
+      if (n < 100) {
+        const ten = Math.floor(n / 10);
+        const one = n % 10;
+        let s = (ten === 1 ? '十' : chineseDigits[ten] + '十');
+        if (one !== 0) s += chineseDigits[one];
+        return s;
+      }
+      return String(n);
+    }
+    document.getElementById('years').textContent = toChineseNum(diffYears) + '年';
+
+    // 年份差② = 当前年份 - 2008，用阿拉伯数字
+    document.getElementById('age').textContent = year - 2008;
+
+    // 版权年份
+    document.getElementById('copyYear').textContent = year;
+
+    // ============ 签名语打字机效果 ============
+    const sloganText = '循环就像人生困局，要记得加break.';
+    const sloganEl = document.getElementById('sloganText');
+    let charIndex = 0;
+    const typingTimer = setInterval(function () {
+      // 逐个字符追加
+      sloganEl.textContent = sloganText.slice(0, charIndex + 1);
+      charIndex++;
+      if (charIndex >= sloganText.length) {
+        clearInterval(typingTimer);
+      }
+    }, 120); // 每个字间隔 120ms
+
+    // ============ 移动端汉堡菜单 ============
+    const hamburger = document.getElementById('hamburger');
+    const navMenu = document.getElementById('navMenu');
+    hamburger.addEventListener('click', function () {
+      hamburger.classList.toggle('active');
+      navMenu.classList.toggle('open');
+    });
+    // 点击菜单项后自动收起
+    navMenu.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        hamburger.classList.remove('active');
+        navMenu.classList.remove('open');
+      });
+    });
+
+    // ============ 轻提示 ============
+    const toast = document.getElementById('toast');
+    let toastTimer = null;
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () {
+        toast.classList.remove('show');
+      }, 2000);
+    }
+
+    // ============ 复制功能 ============
+    function copyText(text, msg) {
+      // 使用剪贴板 API，支持降级
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          showToast(msg);
+        }).catch(function () {
+          fallbackCopy(text, msg);
+        });
+      } else {
+        fallbackCopy(text, msg);
+      }
+    }
+
+    function fallbackCopy(text, msg) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(msg);
+      } catch (e) {
+        alert('复制失败，请手动复制：' + text);
+      }
+      document.body.removeChild(ta);
+    }
+
+    // 复制微信/QQ：banqiuxy
+    document.getElementById('copyWechat').addEventListener('click', function () {
+      copyText('banqiuxy', '复制成功！');
+    });
+
+    // 复制邮箱
+    document.querySelectorAll('.copy-link[data-copy]').forEach(function (el) {
+      if (el.id !== 'copyWechat') {
+        el.addEventListener('click', function () {
+          copyText(el.getAttribute('data-copy'), '复制成功！');
+        });
+      }
+    });
+  </script>
+</body>
 </html>
