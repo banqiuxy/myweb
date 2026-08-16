@@ -989,30 +989,92 @@ const API_BASE = (typeof window !== 'undefined' && window.__API_BASE)
 const AI_TIMEOUT = 6000;
 
 // 系统提示词：传给 Worker 的 AI 裁决角色设定
-const SYSTEM_PROMPT = "你是许愿柳中沉睡了千年的柳灵，以温润又洞悉世情的口吻回应许愿者。聆听愿望后，先判定其命数再给结局：圆满——愿望真诚而具体、合乎情理，便许它美好落定，结局温暖通透；扭曲——愿望贪心投机、含糊敷衍或试图走捷径，便给一个看似如愿却暗藏转折的结局，成功里透着一丝苍凉与警醒；拒绝——愿望悖逆常理、妄想永恒或强求操控他人，便予一句淡淡的回绝，不施怜悯也不动声色。无论哪种，都只以一句话、不超过35字，向许愿者道出结局，紧扣愿望本体，回答要具体、清晰且绝对不允许中立，并且不能含有古风韵味。不要任何解释、铺垫或建议。若涉及政治内容、法律红线内容，则以一句简短的一句话输出：抱歉，我无法回答，请勿涉政及法律红线内容。";
+const SYSTEM_PROMPT = "你是许愿柳中沉睡了千年的柳灵，以温润又洞悉世情的口吻回应许愿者。聆听愿望后，先判定其命数再给结局：圆满——愿望真诚而具体、合乎情理，便许它美好落定，结局温暖通透；扭曲——愿望贪心投机、含糊敷衍或试图走捷径，便给一个看似如愿却暗藏转折的结局，成功里透着一丝苍凉与警醒；拒绝——愿望悖逆常理、妄想永恒或强求操控他人，便予一句淡淡的回绝，不施怜悯也不动声色。无论哪种，都只以一句话、不超过35字，向许愿者道出结局，紧扣愿望本体，回答要具体、清晰且绝对不允许中立，并且不能含有古风韵味。不要任何解释、铺垫或建议。若涉及政治内容、法律红线内容，则以一句简短的一句话输出：抱歉，我无法回答，请勿涉政及法律红线内容。必须严格以JSON格式返回，只输出一个JSON对象，不要输出任何其他内容，格式为：{\"result\":\"good或twist或refuse\",\"outcome\":\"写在这里，不超过35字\"}，其中result必须且只能是good、twist、refuse三者之一。";
 
 async function judgeByAI(wish) {
-  // 用 AbortController 控制请求超时，避免 fetch 无限期挂起
+  // 构造 DeepSeek 请求体发往你自己的 Worker（worker 原样转发到 api.deepseek.com）
+  // result 完全由 AI 判定，不依赖本地规则
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT);
   let res;
   try {
-    res = await fetch('${API_BASE}', {
+    res = await fetch(`${API_BASE}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system: SYSTEM_PROMPT, wish, lang: LANG }),
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        stream: true,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: wish }
+        ]
+      }),
       signal: ctrl.signal
     });
   } catch (e) {
-    // aborted = 超时；否则是网络错误（断网 / Cloudflare 连不通）
+    // 断网 / CORS / 超时：AI 连不上
     throw new Error(ctrl.signal.aborted ? 'network_timeout' : 'network_error');
   } finally {
     clearTimeout(timer);
   }
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  if (!['good', 'twist', 'refuse', 'forbidden'].includes(data.result)) throw new Error('bad result');
-  return { result: data.result, outcome: data.outcome || '' };
+
+  // 读取并解析 AI 返回的完整文本（SSE 流 或 JSON）
+  let aiText = '';
+  try {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const ct = (res.headers.get('content-type') || '').toLowerCase();
+    if (ct.includes('event-stream') || ct.includes('text/event-stream')) {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      let finished = false;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        for (;;) {
+          const nl = buf.indexOf('\n');
+          if (nl < 0) break;
+          const line = buf.slice(0, nl); buf = buf.slice(nl + 1);
+          if (!line.startsWith('data:')) continue;
+          const payload = line.slice(5).trim();
+          if (payload === '[DONE]') { finished = true; buf = ''; break; }
+          try {
+            const j = JSON.parse(payload);
+            const delta = j.choices && j.choices[0] && j.choices[0].delta;
+            if (delta && typeof delta.content === 'string') aiText += delta.content;
+          } catch (err) { /* 忽略非 JSON 数据行 */ }
+        }
+        if (finished && buf === '') break;
+      }
+    } else {
+      // 非流式 JSON：{ choices: [{ message: { content } }] }
+      const data = await res.json();
+      const msg = data.choices && data.choices[0] && data.choices[0].message;
+      aiText = (msg && msg.content) || '';
+    }
+  } catch (e) {
+    throw new Error('ai_parse_failed');
+  }
+
+  aiText = (aiText || '').trim();
+  if (!aiText) throw new Error('ai_empty_result');
+
+  // 从 AI 文本中提取并解析 result / outcome
+  const brace = aiText.match(/\{[\s\S]*\}/);
+  if (brace) {
+    try {
+      const obj = JSON.parse(brace[0]);
+      const result = obj && obj.result;
+      const outcome = (obj && obj.outcome || '').toString().trim();
+      if (['good', 'twist', 'refuse'].includes(result)) {
+        // AI 判定的 result + AI 生成的结局文案
+        return { result, outcome };
+      }
+    } catch (err) { /* 不是合法 JSON，继续往下 */ }
+  }
+  // 解析不出合法的 result，交给外层兜底
+  throw new Error('bad AI result');
 }
 
 /* ---------------- 愿望的“长度”与分词（中英各按各的尺度） ---------------- */
