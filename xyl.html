@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>许愿柳</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Noto+Serif+SC:wght@400;600;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style-willow.css?v=dora-59" />
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <!-- 氛围层 -->
+  <div id="vignette"></div>
+  <div id="grain"></div>
+  <div id="flash"></div>
+
+  <!-- 3:4 竖屏录制画框黑边遮罩 -->
+  <div id="recordFrame"></div>
+
+  <!-- 裁决加载层 -->
+  <div id="judging">
+    <div class="loader"></div>
+    <p data-i18n="judging">柳枝正在审视你的愿望……</p>
+  </div>
+
+  <div id="ui">
+    <div id="ui-canvas">
+      <!-- 自定义编辑模式：连点音频按钮 5 下开启/关闭 -->
+      <div id="editBadge" data-i18n="editBadge">自 定 义</div>
+      <div id="editToast"></div>
+
+      <button id="musicToggle" class="music-toggle" data-i18n-label="musicLabel" aria-label="音乐开关" title="音乐开关">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+        </svg>
+      </button>
+
+      <header id="title">
+        <h1>ONE WISH WILLOW</h1>
+        <div class="cn">许　愿　柳</div>
+        <div class="tag" data-i18n="tag">你只有一次愿望</div>
+      </header>
+
+      <div id="dock">
+        <div id="idlePanel" class="stage">
+          <button id="btnWish" class="rune-btn" data-i18n="btnWish">许　愿</button>
+        </div>
+
+        <div id="wishPanel" class="stage hidden">
+          <p class="lead" data-i18n="lead">双手握住柳枝，在心中默念——</p>
+          <textarea id="wishText" rows="2" maxlength="1500" data-i18n-ph="placeholder"
+            placeholder="写下你唯一的愿望……"></textarea>
+          <button id="btnBreak" class="rune-btn" data-i18n="btnBreak">许 下 愿 望</button>
+          <p class="hint" data-i18n-html="hint">柳枝若断，愿望必成。柳枝不断，愿望永不实现。<br/>切勿贪婪，切勿痴迷。</p>
+        </div>
+      </div>
+
+      <!-- 裁决结果：独立于 #dock，以整个画布为参系居中（略偏上，方便截图） -->
+      <div id="resultPanel" class="stage center hidden">
+        <div id="resultTitle"></div>
+        <div id="resultSub"></div>
+        <button id="btnAgain" class="rune-btn hidden" data-i18n="btnAgain">再 许 一 次</button>
+        <button id="btnRestart" class="rune-btn hidden" data-i18n="btnRestart">重 新 开 始</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./lib/three.module.js",
+      "three/addons/": "./lib/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="main.js?v=dora-59"></script>
+</body>
+</html>
