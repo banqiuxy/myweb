@@ -1,0 +1,588 @@
+/* ============ 许愿柳 · ONE WISH WILLOW ============ */
+:root {
+  --blood: #7a1424;
+  --blood-bright: #b0202f;
+  --bone: #e8dcc3;
+  --ash: #6f665a;
+  --black: #050404;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--black);
+  overflow: hidden;
+  font-family: "Noto Serif SC", serif;
+  color: var(--bone);
+  user-select: none;
+  /* iOS Safari 键盘弹出时用 dvh 锁定视口高度 */
+  height: 100dvh;
+  /* 微信 / B 站等内置浏览器会自动放大字号（font boosting），会把标题、提示、按钮全部挤成两行 */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+#scene {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  height: 100dvh;
+  display: block;
+}
+
+/* ---------- 氛围层 ---------- */
+#vignette {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 46%,
+    transparent 30%, rgba(0,0,0,.55) 72%, rgba(0,0,0,.92) 100%);
+  z-index: 3;
+}
+
+#grain {
+  position: fixed; inset: -100px;
+  pointer-events: none;
+  z-index: 4;
+  opacity: .07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain-jitter .42s steps(4) infinite;
+}
+@keyframes grain-jitter {
+  0% { transform: translate(0,0); }
+  25% { transform: translate(-32px,18px); }
+  50% { transform: translate(22px,-26px); }
+  75% { transform: translate(-14px,-30px); }
+  100% { transform: translate(0,0); }
+}
+
+#flash {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: #fff7e0;
+  opacity: 0;
+}
+#flash.crack { animation: crack-flash .5s ease-out; }
+@keyframes crack-flash {
+  0% { opacity: 0; }
+  8% { opacity: .85; }
+  100% { opacity: 0; }
+}
+
+/* 3:4 竖屏录制画框：用向外投影把画框以外区域遮成纯黑 */
+#recordFrame {
+  position: fixed;
+  z-index: 5;
+  pointer-events: none;
+  display: none;
+  box-shadow: 0 0 0 100vmax #000;
+}
+body.record #recordFrame { display: block; }
+
+body.shake #scene, body.shake #ui { animation: cam-shake .45s linear; }
+@keyframes cam-shake {
+  0%,100% { transform: translate(0,0); }
+  15% { transform: translate(-9px,6px); }
+  30% { transform: translate(8px,-7px); }
+  45% { transform: translate(-6px,-5px); }
+  60% { transform: translate(6px,4px); }
+  75% { transform: translate(-3px,3px); }
+}
+
+body.struggle #scene { animation: tremble .12s linear infinite; }
+@keyframes tremble {
+  0%,100% { transform: translate(0,0); }
+  25% { transform: translate(-1.5px,1px); }
+  50% { transform: translate(1.5px,-1px); }
+  75% { transform: translate(-1px,-1.5px); }
+}
+
+/* 音乐开关 */
+.music-toggle {
+  position: absolute;
+  top: 24px; right: 24px;
+  z-index: 10;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(176,32,47,.45);
+  background: rgba(8,5,5,.55);
+  color: var(--bone);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(2px);
+  transition: all .35s ease;
+}
+.music-toggle:hover {
+  border-color: rgba(176,32,47,.85);
+  background: rgba(122,20,36,.28);
+  box-shadow: 0 0 18px rgba(176,32,47,.35);
+}
+.music-toggle.off {
+  opacity: .45;
+  border-color: rgba(111,102,90,.4);
+}
+.music-toggle.off svg {
+  display: none;
+}
+.music-toggle.off::after {
+  content: "\\2016";
+  font-size: 14px;
+  letter-spacing: -2px;
+  color: var(--bone);
+}
+
+/* 中英切换：与音乐键同款，叠在其正下方（top = 24 + 42 + 10） */
+.lang-toggle {
+  top: 76px;
+  font-family: "IM Fell English SC", serif;
+  font-size: 15px;
+  line-height: 1;
+  letter-spacing: .02em;
+  padding: 0;
+}
+/* 英文模式下键面是“中”字，换回中文字体 */
+body.lang-en .lang-toggle {
+  font-family: "Noto Serif SC", serif;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+/* ---------- UI ---------- */
+#ui {
+  position: fixed; inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+#ui-canvas {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 1600px;
+  height: 1000px;
+  transform-origin: center center;
+  pointer-events: auto;
+}
+
+#title {
+  position: absolute;
+  top: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  opacity: 0;
+  animation: fade-down 2.4s ease .6s forwards;
+}
+@keyframes fade-down {
+  from { opacity: 0; transform: translateX(-50%) translateY(-18px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+#title .small-cap {
+  font-family: "IM Fell English SC", serif;
+  letter-spacing: .55em;
+  font-size: 11px;
+  color: var(--ash);
+  margin-bottom: 8px;
+}
+#title h1 {
+  font-family: "IM Fell English SC", serif;
+  font-weight: 400;
+  font-size: clamp(24px, 6vw, 50px);
+  letter-spacing: .18em;
+  color: var(--bone);
+  text-shadow: 0 0 26px rgba(176,32,47,.35);
+  /* 英文主标题始终单行 */
+  white-space: nowrap;
+}
+#title .cn {
+  font-size: clamp(17px, 3.6vw, 26px);
+  letter-spacing: 1.2em;
+  margin: 10px 0 0 1.2em;
+  color: var(--blood-bright);
+}
+#title .tag {
+  margin-top: 10px;
+  font-size: clamp(12px, 2.2vw, 15px);
+  letter-spacing: .4em;
+  color: var(--ash);
+}
+
+/* 底部面板坞：各阶段面板重叠在同一格，隐藏时不占布局 */
+#dock {
+  display: grid;
+  place-items: end center;
+  position: absolute;
+  bottom: 8.5%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+#dock .stage { grid-area: 1 / 1; }
+/* 竖屏录制：底部预留更多呼吸空间，避免提示文字太贴底 */
+body.record #dock { bottom: 11%; }
+body.record #title { top: 6%; }
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  pointer-events: auto;
+  transition: opacity .8s ease, transform .8s ease;
+}
+.stage.hidden {
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.rune-btn {
+  font-family: "Noto Serif SC", serif;
+  font-weight: 600;
+  font-size: clamp(15px, 3.6vw, 17px);
+  letter-spacing: .3em;
+  text-indent: .3em;
+  color: var(--bone);
+  background: linear-gradient(180deg, rgba(122,20,36,.28), rgba(122,20,36,.08));
+  border: 1px solid rgba(176,32,47,.55);
+  padding: 15px 54px;
+  cursor: pointer;
+  position: relative;
+  transition: all .35s ease;
+  backdrop-filter: blur(2px);
+  /* 按钮文字永不折行 */
+  white-space: nowrap;
+}
+.rune-btn::before, .rune-btn::after {
+  content: "";
+  position: absolute;
+  width: 7px; height: 7px;
+  border: 1px solid rgba(232,220,195,.5);
+}
+.rune-btn::before { top: -4px; left: -4px; border-right: none; border-bottom: none; }
+.rune-btn::after { bottom: -4px; right: -4px; border-left: none; border-top: none; }
+.rune-btn:hover {
+  background: linear-gradient(180deg, rgba(176,32,47,.5), rgba(122,20,36,.18));
+  box-shadow: 0 0 32px rgba(176,32,47,.35), inset 0 0 18px rgba(176,32,47,.25);
+  text-shadow: 0 0 12px rgba(255,220,220,.8);
+}
+.rune-btn:active { transform: scale(.97); }
+.rune-btn:disabled { opacity: .35; cursor: default; }
+.rune-btn.hidden { display: none; }
+
+/* 许愿面板整体比按钮坞抬高（约 1/10 屏高），提示文字与输入区离底更远 */
+#wishPanel { margin-bottom: 10vh; }
+
+#wishPanel .lead {
+  font-size: clamp(12px, 3vw, 15px);
+  letter-spacing: .28em;
+  color: var(--bone);
+  opacity: .85;
+  margin: 0;
+  position: relative;
+  z-index: 5;
+}
+#wishText {
+  width: min(460px, 70%);
+  font-family: "Noto Serif SC", serif;
+  font-size: 16px;
+  letter-spacing: .12em;
+  line-height: 1.9;
+  text-align: center;
+  color: var(--bone);
+  background: rgba(8,5,5,.66);
+  border: none;
+  border-bottom: 1px solid rgba(176,32,47,.6);
+  outline: none;
+  resize: none;
+  padding: 12px 16px;
+  caret-color: var(--blood-bright);
+  transition: border-color .3s, box-shadow .3s;
+}
+#wishText::placeholder { color: rgba(111,102,90,.8); }
+#wishText:focus {
+  border-bottom-color: var(--blood-bright);
+  box-shadow: 0 14px 30px -18px rgba(176,32,47,.5);
+}
+#wishPanel .hint {
+  font-size: clamp(10px, 2.4vw, 11.5px);
+  letter-spacing: .3em;
+  line-height: 2.0;
+  text-align: center;
+  color: var(--ash);
+}
+
+/* ---------- 违规内容黑屏：涉黄 / 涉政 / 反人类 ---------- */
+/* 整屏纯黑，盖住 3D、氛围层与所有 UI，并阻止下方任何交互；只能刷新页面恢复 */
+body.blackout #scene,
+body.blackout #ui,
+body.blackout #vignette,
+body.blackout #grain,
+body.blackout #flash,
+body.blackout #judging { display: none; }
+body.blackout::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: #000;
+  animation: blackout-in .45s ease forwards;
+}
+@keyframes blackout-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---------- 自定义编辑模式 ---------- */
+#editBadge {
+  position: absolute;
+  top: 28px; left: 24px;
+  z-index: 10;
+  display: none;
+  padding: 5px 12px;
+  font-size: 11px;
+  letter-spacing: .3em;
+  text-indent: .3em;
+  color: var(--bone);
+  border: 1px solid rgba(176,32,47,.55);
+  background: rgba(122,20,36,.22);
+  backdrop-filter: blur(2px);
+}
+body.edit #editBadge { display: block; }
+
+#editToast {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 11;
+  padding: 14px 26px;
+  font-size: 13px;
+  letter-spacing: .22em;
+  text-align: center;
+  color: var(--bone);
+  background: rgba(8,5,5,.85);
+  border: 1px solid rgba(176,32,47,.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .45s ease;
+}
+#editToast.show { opacity: 1; }
+
+/* 编辑模式下，柳枝的回答（标题 + 裁决文案）可直接点开改写 */
+body.edit #resultTitle,
+body.edit #resultSub {
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+  outline: 1px dashed rgba(176,32,47,.45);
+  outline-offset: 8px;
+}
+body.edit #resultTitle:focus,
+body.edit #resultSub:focus {
+  outline-style: solid;
+  outline-color: rgba(232,220,195,.55);
+}
+/* 改写时允许换行，不然长句会冲出画面 */
+body.edit #resultTitle { white-space: normal; }
+
+/* ---------- 结果 ---------- */
+#resultPanel.center {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
+  /* 柳枝占上中部，文字与按钮落在其下方（JS 根据柳枝实际位置动态设定 padding-top） */
+  padding: 38% 20px 6%;
+  pointer-events: auto;
+  transition: opacity .8s ease, transform .8s ease, visibility .8s;
+}
+#resultPanel.center.hidden {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  visibility: hidden;
+  z-index: -1;
+}
+
+#resultTitle {
+  font-size: clamp(30px, 8vw, 50px);
+  font-weight: 900;
+  letter-spacing: .32em;
+  text-indent: .32em;
+  text-align: center;
+  white-space: nowrap;
+}
+#resultTitle.granted {
+  color: var(--bone);
+  text-shadow: 0 0 40px rgba(232,220,195,.6), 0 0 90px rgba(176,32,47,.55);
+  animation: granted-in 1.6s ease forwards;
+}
+@keyframes granted-in {
+  from { opacity: 0; letter-spacing: .8em; filter: blur(8px); }
+  to { opacity: 1; letter-spacing: .32em; filter: blur(0); }
+}
+#resultTitle.denied {
+  color: var(--blood-bright);
+  text-shadow: 0 0 30px rgba(176,32,47,.8);
+  animation: denied-in 2.4s ease forwards;
+}
+@keyframes denied-in {
+  0% { opacity: 0; filter: blur(10px); transform: scale(1.15); }
+  40% { opacity: .9; }
+  55% { opacity: .25; }
+  70% { opacity: 1; }
+  100% { opacity: 1; filter: blur(0); transform: scale(1); }
+}
+
+#resultSub {
+  font-size: clamp(12px, 3vw, 14px);
+  letter-spacing: .34em;
+  text-align: center;
+  line-height: 2.4;
+  color: var(--ash);
+  opacity: 0;
+  animation: fade-in 1.6s ease 1.2s forwards;
+}
+/* 每个断句整体不断行，只在断句之间的零宽空格处换行 */
+#resultSub .ln {
+  white-space: nowrap;
+}
+
+#resultPanel .rune-btn {
+  opacity: 0;
+  animation: fade-in 1.2s ease 2.2s forwards;
+}
+
+@keyframes fade-in { to { opacity: 1; } }
+
+/* 裁决加载层 */
+#judging {
+  position: fixed; inset: 0;
+  z-index: 7;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 26px;
+  background: rgba(3,2,2,.72);
+  backdrop-filter: blur(2px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .6s ease;
+}
+#judging.visible { opacity: 1; pointer-events: auto; }
+#judging p {
+  font-size: 13px; letter-spacing: .5em;
+  color: var(--bone);
+  animation: pulse-text 1.6s ease-in-out infinite;
+}
+@keyframes pulse-text {
+  0%,100% { opacity: .4; }
+  50% { opacity: 1; }
+}
+.loader {
+  width: 42px; height: 42px;
+  border: 2px solid rgba(176,32,47,.25);
+  border-top-color: var(--blood-bright);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- 手机竖屏（含微信 / B 站内置浏览器） ----------
+   目标：标题、输入提示、按钮全部单行，且柳枝与文字不重叠
+   尺寸用 min(vw, px)：窄屏跟着宽度缩，宽一点的屏不超过上限 */
+@media (max-width: 640px) {
+  /* 1. 英文标题单行：字距收到 .06em，字号跟宽度缩；整块下移一点并让开右上角音乐键 */
+  #title { top: 8.5%; max-width: 92vw; }
+  #title h1 { font-size: min(6vw, 26px); letter-spacing: .06em; }
+  .music-toggle { width: 34px; height: 34px; top: 12px; right: 12px; }
+  .music-toggle svg { width: 16px; height: 16px; }
+  .lang-toggle { top: 54px; font-size: 13px; }
+  body.lang-en .lang-toggle { font-size: 14px; }
+  #title .cn { font-size: min(4.6vw, 22px); letter-spacing: .55em; margin: 8px 0 0 .55em; }
+  #title .tag { font-size: min(3.2vw, 13px); letter-spacing: .3em; margin-top: 8px; }
+
+  /* 2. 面板整体收紧，给柳枝腾出空间；面板宽度固定成视口百分比，不再由内容撑出来 */
+  .stage { gap: 14px; }
+  #wishPanel { margin-bottom: 7vh; width: min(460px, 90vw); }
+
+  /* 3. 提示语与输入提示各单行 */
+  #wishPanel .lead { font-size: min(3.5vw, 14px); letter-spacing: .1em; white-space: nowrap; }
+  /* 字号保持 16px（防 iOS 聚焦时自动放大页面）；宽度用 vw 而不是 %，否则会按面板宽度算得太窄 */
+  #wishText {
+    font-size: 16px;
+    width: min(440px, 84vw);
+    letter-spacing: .04em;
+    line-height: 1.7;
+    padding: 10px 12px;
+  }
+
+  /* 4. 按钮四个字单行 */
+  .rune-btn { font-size: min(4.2vw, 17px); letter-spacing: .22em; text-indent: .22em; padding: 13px 30px; }
+
+  #wishPanel .hint { font-size: min(2.9vw, 11.5px); letter-spacing: .16em; line-height: 1.9; }
+  #resultTitle { font-size: min(9vw, 40px); letter-spacing: .22em; text-indent: .22em; }
+  #resultSub { font-size: min(3.4vw, 14px); letter-spacing: .18em; line-height: 2.1; }
+}
+
+/* 3:4 录制模式：UI 在 900×1200 设计稿内等比缩放，字号用固定 px（随画布缩放），
+   不能用基于视口的 vw/clamp（会算错） */
+body.record #title h1 { font-size: 48px; }
+body.record #title .cn { font-size: 26px; }
+body.record #title .tag { font-size: 15px; }
+body.record .rune-btn { font-size: 17px; }
+body.record #wishPanel .lead { font-size: 15px; }
+body.record #wishPanel .hint { font-size: 11.5px; }
+body.record #wishPanel { margin-bottom: 120px; }
+body.record #resultTitle { font-size: 50px; }
+body.record #resultSub { font-size: 14px; }
+
+/* ---------- 英文模式排版 ----------
+   中文靠大字距排出仪式感，西文拉开同样的字距只会散掉；
+   且英文句子更长，标题与裁决语必须允许换行，不能再 nowrap */
+body.lang-en #title .cn { display: none; }
+body.lang-en #title .tag { letter-spacing: .2em; }
+body.lang-en #editBadge { letter-spacing: .18em; text-indent: .18em; }
+body.lang-en #editToast { letter-spacing: .04em; }
+body.lang-en #judging p { letter-spacing: .16em; }
+body.lang-en .rune-btn { letter-spacing: .14em; text-indent: .14em; }
+/* 西文提示语较长，窄屏会换行，必须显式居中（中文单行时看不出来） */
+body.lang-en #wishPanel .lead { letter-spacing: .07em; white-space: normal; text-align: center; }
+body.lang-en #wishText { letter-spacing: .01em; }
+body.lang-en #wishPanel .hint { letter-spacing: .05em; line-height: 1.9; }
+
+body.lang-en #resultTitle {
+  font-size: clamp(26px, 6.4vw, 42px);
+  letter-spacing: .12em;
+  text-indent: .12em;
+  white-space: normal;
+  line-height: 1.3;
+  max-width: min(760px, 88vw);
+}
+/* granted 的入场动画会把字距回弹到 .32em，英文得换一组关键帧 */
+body.lang-en #resultTitle.granted { animation-name: granted-in-en; }
+@keyframes granted-in-en {
+  from { opacity: 0; letter-spacing: .45em; filter: blur(8px); }
+  to { opacity: 1; letter-spacing: .12em; filter: blur(0); }
+}
+body.lang-en #resultSub {
+  letter-spacing: .05em;
+  line-height: 1.95;
+  max-width: min(620px, 86vw);
+}
+/* 西文整行一个 span，必须允许在单词间换行 */
+body.lang-en #resultSub .ln { white-space: normal; }
+/* 3:4 录制模式里 UI 是固定设计稿缩放，字号不能再跟视口走 */
+body.record.lang-en #resultTitle { font-size: 42px; }
+body.record.lang-en #resultSub { font-size: 14px; }
+
+@media (max-width: 640px) {
+  body.lang-en #resultTitle { font-size: min(7.6vw, 32px); letter-spacing: .08em; text-indent: .08em; }
+  body.lang-en #resultSub { font-size: min(3.4vw, 14px); letter-spacing: .03em; line-height: 1.8; }
+  body.lang-en #wishPanel .lead { font-size: min(3.3vw, 13px); }
+  body.lang-en .rune-btn { letter-spacing: .1em; text-indent: .1em; padding: 13px 24px; }
+}

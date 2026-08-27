@@ -1,0 +1,16 @@
+.acside/
+.backup/
+.gradle/
+.kotlin/
+.idea/
+
+AI-README/
+build/
+app/build/
+node_modules/
+__pycache__/
+
+*.iml
+*.log
+*.tmp
+.env
