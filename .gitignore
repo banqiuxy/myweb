@@ -9,6 +9,7 @@ build/
 app/build/
 node_modules/
 __pycache__/
+github_rep/
 
 *.iml
 *.log
