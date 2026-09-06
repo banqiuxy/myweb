@@ -1002,7 +1002,7 @@ async function judgeByAI(wish) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'deepseek-v4-flash',
+        model: 'mimo-v2.5-free',
         stream: true,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
