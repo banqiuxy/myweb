@@ -3,33 +3,20 @@
    设计语言：真实玻璃 / 单强调色 / 呼吸感排版 / 分层动效
    ============================================================ */
 :root {
-  --font-body: "Outfit", "PingFang SC", "Microsoft YaHei", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-
   --bg: #0b0e1c;
   --bg-soft: #141833;
-  --card: rgba(255, 255, 255, 0.045);
-  --card-strong: rgba(255, 255, 255, 0.07);
+
   --text: #e8ecf5;
   --text-soft: #b4bcd6;
   --text-dim: #7c84a8;
 
-  --accent: #7c9cf5;
-  --accent-soft: #5a76d8;
-  --accent-glow: rgba(124, 156, 245, 0.32);
   --pink: #f06292;
   --green: #4ade80;
 
-  --line: rgba(255, 255, 255, 0.11);
-  --glass-inner: rgba(255, 255, 255, 0.06);
-
   --shadow: 0 18px 50px -18px rgba(0, 0, 0, 0.65);
   --r-lg: 24px;
-  --r-md: 16px;
-  --r-sm: 12px;
-}
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+}
 
 html, body { height: 100%; }
 body {
@@ -85,10 +72,10 @@ body::after {
 .btn:active { transform: scale(.97); }
 .btn.block { width: 100%; }
 .btn.ghost {
-  background: var(--card); color: var(--text-soft); border: 1px solid var(--line);
+  background: var(--glass-bg); color: var(--text-soft); border: 1px solid var(--glass-border);
   box-shadow: inset 0 1px 0 var(--glass-inner); backdrop-filter: blur(12px);
 }
-.btn.ghost:hover { background: var(--card-strong); color: var(--text); }
+.btn.ghost:hover { background: var(--glass-bg-strong); color: var(--text); }
 .btn.sm { padding: 9px 14px; font-size: 13px; border-radius: 10px; }
 .btn[disabled] { opacity: .4; cursor: not-allowed; transform: none; }
 
@@ -97,7 +84,7 @@ body::after {
 
 .topbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px; border-bottom: 1px solid var(--line);
+  padding: 16px 20px; border-bottom: 1px solid var(--glass-border);
   position: sticky; top: 0; z-index: 10;
   background: rgba(11, 14, 28, 0.6);
   backdrop-filter: blur(24px) saturate(150%);
@@ -117,7 +104,7 @@ body::after {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 28px 0;
 }
 .feature {
-  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--r-md);
   padding: 16px 12px; backdrop-filter: blur(20px) saturate(140%);
   box-shadow: inset 0 1px 0 var(--glass-inner);
   transition: transform .25s cubic-bezier(.2,.8,.2,1), border-color .25s;
@@ -146,8 +133,8 @@ body::after {
 .options { display: flex; flex-direction: column; gap: 12px; max-width: 560px; margin: 0 auto; width: 100%; }
 .opt {
   display: flex; align-items: center; gap: 14px;
-  padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--r-md);
-  background: var(--card); color: var(--text); cursor: pointer;
+  padding: 16px 18px; border: 1px solid var(--glass-border); border-radius: var(--r-md);
+  background: var(--glass-bg); color: var(--text); cursor: pointer;
   transition: transform .15s cubic-bezier(.2,.8,.2,1), border-color .2s, background .2s, box-shadow .2s;
   -webkit-tap-highlight-color: transparent; font-size: 16px; font-family: inherit; text-align: left;
   backdrop-filter: blur(16px) saturate(130%);
@@ -157,7 +144,7 @@ body::after {
 .opt:active { transform: scale(.98); }
 .opt .marker {
   width: 28px; height: 28px; border-radius: 50%; flex: none;
-  border: 2px solid var(--line); display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--glass-border); display: flex; align-items: center; justify-content: center;
   font-size: 12px; color: var(--text-dim); font-weight: 700; font-family: var(--font-mono);
   transition: all .2s;
 }
@@ -206,7 +193,7 @@ body::after {
 .dim-bar .mid { position: absolute; top: -3px; bottom: -3px; left: 50%; width: 2px; background: rgba(255,255,255,.25); }
 
 .card {
-  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--r-md);
   padding: 18px; margin-bottom: 14px;
   backdrop-filter: blur(20px) saturate(140%);
   box-shadow: var(--shadow), inset 0 1px 0 var(--glass-inner);
@@ -236,13 +223,13 @@ body::after {
 /* ---------- 页面5 图鉴页 ---------- */
 .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .gcell {
-  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--r-md);
   padding: 14px; cursor: pointer; text-align: left; font-family: inherit; color: inherit;
   backdrop-filter: blur(16px) saturate(130%);
   box-shadow: inset 0 1px 0 var(--glass-inner);
   transition: transform .18s cubic-bezier(.2,.8,.2,1), border-color .2s, background .2s;
 }
-.gcell:hover { border-color: rgba(124,156,245,.4); transform: translateY(-2px); background: var(--card-strong); }
+.gcell:hover { border-color: rgba(124,156,245,.4); transform: translateY(-2px); background: var(--glass-bg-strong); }
 .gcell .gc { font-size: 18px; font-weight: 800; letter-spacing: 2px; font-family: var(--font-mono); }
 .gcell .gn { font-size: 14px; color: var(--text-soft); margin-top: 2px; }
 .gcell .gd { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
@@ -257,7 +244,7 @@ body::after {
 .toast {
   position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
   background: rgba(42,47,74,.92); color: var(--text); padding: 10px 18px; border-radius: 99px;
-  font-size: 14px; border: 1px solid var(--line); z-index: 100;
+  font-size: 14px; border: 1px solid var(--glass-border); z-index: 100;
   opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s cubic-bezier(.2,.8,.2,1);
   backdrop-filter: blur(16px);
 }
@@ -267,14 +254,10 @@ body::after {
 .mt8 { margin-top: 8px; } .mt16 { margin-top: 16px; } .mb8 { margin-bottom: 8px; } .mb16 { margin-bottom: 16px; }
 
 /* 无障碍焦点 */
-button:focus-visible, .gcell:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 /* ---------- 响应式 ---------- */
 @media (max-width: 480px) {
   .features { grid-template-columns: 1fr; }
   .scene-grid { grid-template-columns: 56px 1fr; }
   .wrap { padding: 18px 14px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  * { animation-duration: .001s !important; transition-duration: .001s !important; }
 }

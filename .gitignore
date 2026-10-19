@@ -1,17 +1,12 @@
-.acside/
+# 本地备份（确认无误后由用户手动删除，不纳入版本控制/部署）
 .backup/
-.gradle/
-.kotlin/
-.idea/
+.backup-*/
 
-AI-README/
-build/
-app/build/
 node_modules/
-__pycache__/
-github_rep/
 
-*.iml
+# 本地静态服务器 PID（start-server.sh 写入，stop-server.sh 读取）
+scripts/.server.pid
+
 *.log
 *.tmp
 .env

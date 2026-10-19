@@ -1,0 +1,55 @@
+/* ============================================================
+   共享设计系统 —— 玻璃拟态基础层
+   ------------------------------------------------------------
+   只放三个玻璃风格页面（主页 / MBTI / 塔罗）共用的：
+   - 字体栈与表面 token（页面可在自己的 CSS 里覆盖）
+   - 全局 reset、选区、键盘焦点、减少动效
+
+   页面样式必须在 shared.css 之后加载，才能覆盖这里的默认值。
+   许愿柳（xyl.html）是独立的暗红/骨白美术方向，不引用本文件。
+   ============================================================ */
+
+:root {
+  --font-body: "Outfit", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* 玻璃面：三层不透明度 + 顶部高光内描边 */
+  --glass-bg: rgba(255, 255, 255, 0.055);
+  --glass-bg-strong: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.13);
+  --glass-inner: rgba(255, 255, 255, 0.06);
+
+  /* 默认强调色（主页 / MBTI）；塔罗在自己的 CSS 里覆盖 */
+  --accent: #7c9cf5;
+  --accent-soft: #5a76d8;
+  --accent-glow: rgba(124, 156, 245, 0.35);
+
+  /* 默认圆角与阴影；页面可按自己的造型覆盖 */
+  --r-lg: 26px;
+  --r-md: 16px;
+  --r-sm: 12px;
+  --shadow-soft: 0 18px 50px -18px rgba(0, 0, 0, 0.6);
+}
+
+/* 三个页面原本各自重复了一遍同样的 reset，这里收敛成一份 */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+::selection { background: var(--accent-glow); color: #fff; }
+
+/* 键盘焦点：鼠标点击不显示，Tab 导航时统一成强调色描边。
+   不在这里改 border-radius，避免聚焦瞬间改变元素造型。 */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: .001s !important;
+    transition-duration: .001s !important;
+  }
+}
